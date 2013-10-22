@@ -83,11 +83,12 @@ sub my_read
 {
   plugin_log(LOG_ERR, "RabbitMQ: starting http request");
   eval {
-    my $ua = LWP::UserAgent->new;
-    $ua->timeout(5);
-    $ua->credentials("$host:$port",$realm,$username,$password);
-    my $req = GET "http://$host:$port/api/queues";
-    $res = $ua->request($req);
+    # UserAgent authentication procedure based on
+    # http://stackoverflow.com/questions/1799147/why-dont-my-lwpuseragent-credentials-work
+    my $browser = LWP::UserAgent->new;
+    my $req =  HTTP::Request->new( GET => "http://$host:$port/api/queues");
+    $req->authorization_basic( "$username", "$password" );
+    $res = $browser->request( $req );
   };
   if ($@) {
     plugin_log(LOG_ERR, "RabbitMQ: exception fetching document by http");
